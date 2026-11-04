@@ -1,10 +1,10 @@
 # 0002 — Publish the glossary as a public repository under an open licence
 
-**Status:** proposed
+**Status:** accepted
 
 **Date:** 2026-11-04
 
-**Decided by:** Founder (pending)
+**Decided by:** Founder
 
 ## Context
 

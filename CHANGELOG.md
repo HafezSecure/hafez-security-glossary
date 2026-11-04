@@ -14,3 +14,9 @@ Record what someone using the glossary or its datasets would notice, not the com
 - The term schema (`schema/term.schema.json`), the domain vocabulary (`schema/domains.json`) and the translation policy.
 - The `validate` and `build` scripts and the local gate wired around them.
 - An initial seed of draft terms spanning all eight domains, pending review.
+- Decision record 0004: the HafezSecure Academy is the primary feeder of terms.
+- The roadmap and operating model ([docs/plans/roadmap.md](docs/plans/roadmap.md)).
+
+### Changed
+
+- Decision 0002 (public repository and open licence) accepted by the owner; the repository is published publicly.

@@ -14,6 +14,7 @@ Every document in this repository is listed here. Read in this order if you are 
 - [Data model](architecture/data-model.md): the shape of a term file, the slug rules, the datasets the build produces, and the rendering contract a consumer (the website) follows.
 - [Translation policy](translation-policy.md): how a preferred Persian translation is chosen, and how alternatives are flagged.
 - [AI opportunity map](product/ai-opportunities.md): each part of the product, what AI could do for it, and the decision.
+- [Roadmap and operating model](plans/roadmap.md): the phases, and how the glossary is run day to day.
 - [Decision records](decisions/README.md): decisions that are expensive to reverse, and their status.
 - [Configuration](configuration.md): environment variables (there are none).
 - [Security](../SECURITY.md): how to report a vulnerability in the tooling.

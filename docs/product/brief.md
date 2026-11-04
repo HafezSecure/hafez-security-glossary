@@ -1,6 +1,6 @@
 # Project brief — Hafez Security Glossary
 
-> **Status:** Proposed (awaiting owner approval of the public-repository and licence decision)\
+> **Status:** Accepted (owner approved the public-repository and licence decision on 2026-11-04)\
 > **Owner:** Founder\
 > **Date:** 2026-11-04
 
@@ -25,6 +25,7 @@ Filled from the handbook's [project brief template](https://github.com/HafezSecu
   - The international reader who finds a term through search and wants its Persian equivalent and a short definition.
   - Downstream tools (the website glossary, Academy tooltips) that consume the dataset.
 - **Why now:** HafezSecure already produces a large security corpus (Academy, CTF, website) and a shared vocabulary is needed anyway; publishing it as a commons turns a necessity into a cultural contribution and a brand and discoverability asset.
+- **Where terms come from:** the HafezSecure Academy is the **primary feeder** — its lessons generate and need vocabulary continuously; the website, CTF and community are secondary sources. See [decision record 0004](../decisions/0004-academy-primary-term-feeder.md).
 
 ## 3. Product type
 
@@ -110,9 +111,9 @@ None in this repository. It is public and read-only to the world; contributions 
 | Field | Answer |
 | --- | --- |
 | Owner | Founder |
-| Approved by | Founder — **pending** |
-| Approval date | — |
-| Open questions | Accept going public and the dual licence ([ADR 0002](../decisions/0002-public-repository-and-open-licence.md)) — Founder. Whether a public repository should have a validating CI despite the no-GitHub-CI rule — Founder. How deep the first seed should go beyond one representative batch per domain — Founder. |
+| Approved by | Founder |
+| Approval date | 2026-11-04 |
+| Open questions | Whether a public repository should have a validating CI despite the no-GitHub-CI rule — Founder. How deep the first seed should go beyond one representative batch per domain — Founder. |
 
 ## Sources
 
