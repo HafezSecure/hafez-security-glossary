@@ -1,0 +1,24 @@
+# LF everywhere, so files behave the same on every checkout and scripts run on Linux hosts.
+* text=auto eol=lf
+*.sh text eol=lf
+*.md text eol=lf
+
+# Binary assets: never normalised or diffed as text.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.avif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.docx binary
+*.xlsx binary
+*.pptx binary
+*.zip binary
+*.tgz binary
+*.gz binary

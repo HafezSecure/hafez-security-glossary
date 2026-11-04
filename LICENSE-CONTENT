@@ -1,0 +1,25 @@
+Hafez Security Glossary — dictionary content licence
+واژه‌نامهٔ امنیت حافظ — پروانهٔ محتوا
+
+The dictionary content in this repository — everything under `terms/`, and the
+datasets built from it into `dist/` — is licensed under the
+
+    Creative Commons Attribution 4.0 International License (CC BY 4.0).
+
+You are free to share and adapt this content for any purpose, including
+commercially, provided you give appropriate credit. Suggested attribution:
+
+    "Hafez Security Glossary by HafezSecure (hafezsecure.ir),
+     licensed under CC BY 4.0."
+
+The full, canonical legal text of CC BY 4.0 governs and is at:
+
+    https://creativecommons.org/licenses/by/4.0/legalcode
+    Human-readable summary: https://creativecommons.org/licenses/by/4.0/
+
+The licence applies to the content only. The tooling (scripts and schema) is
+under the MIT License; see LICENSE.
+
+Note: the full CC BY 4.0 legal text will be vendored into this file verbatim
+before the first tagged release; until then the canonical URL above governs.
+See decision record docs/decisions/0002-public-repository-and-open-licence.md.

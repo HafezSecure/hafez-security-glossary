@@ -1,0 +1,10 @@
+{
+  "web": { "fa": "وب", "en": "Web" },
+  "network": { "fa": "شبکه", "en": "Network" },
+  "crypto": { "fa": "رمزنگاری", "en": "Cryptography" },
+  "forensics": { "fa": "جرم‌یابی دیجیتال", "en": "Digital Forensics" },
+  "malware": { "fa": "بدافزار", "en": "Malware" },
+  "cloud": { "fa": "امنیت ابری", "en": "Cloud Security" },
+  "osint": { "fa": "اطلاعات متن‌باز", "en": "OSINT" },
+  "appsec": { "fa": "امنیت نرم‌افزار", "en": "Application Security" }
+}

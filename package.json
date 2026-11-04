@@ -1,0 +1,24 @@
+{
+  "name": "hafez-security-glossary",
+  "version": "0.1.0",
+  "private": false,
+  "license": "MIT",
+  "description": "Open bilingual English–Persian dictionary of information-security terms, by HafezSecure.",
+  "type": "module",
+  "packageManager": "pnpm@11.5.0",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "validate": "node scripts/validate.mjs",
+    "build": "node scripts/build.mjs",
+    "typecheck": "echo 'typecheck: not applicable (no TypeScript in this data repository).'",
+    "lint": "node scripts/validate.mjs",
+    "test": "node scripts/validate.mjs",
+    "check:docs": "node scripts/check-docs.mjs",
+    "check:ci": "bash scripts/check-ci.sh"
+  },
+  "dependencies": {
+    "yaml": "2.6.1"
+  }
+}

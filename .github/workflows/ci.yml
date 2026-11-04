@@ -1,0 +1,110 @@
+# The gate for the Hafez Security Glossary. It follows the HafezSecure handbook:
+# https://github.com/HafezSecure/hafez-handbook/blob/main/engineering/testing-and-ci.md
+#
+# This file is the written definition of the local gate. GitHub does not run it: GitHub CI is not
+# used (founder decision, 2026-10-17). `pnpm check:ci` (scripts/check-ci.sh) runs every step below,
+# in this order, on your machine before every merge; a step added here is added there in the same
+# commit.
+name: Gate
+
+# Manual runs only.
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Validate terms
+            script: validate
+          - name: Build datasets
+            script: build
+          - name: Docs check
+            script: check:docs
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install from the lockfile
+        run: pnpm install --frozen-lockfile
+      - name: Run ${{ matrix.script }}
+        run: pnpm run ${{ matrix.script }}
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install from the lockfile
+        run: pnpm install --frozen-lockfile
+      - name: Full advisory report (informational, does not block)
+        run: pnpm audit --audit-level low || true
+      - name: Gate on high and critical advisories in production dependencies
+        run: pnpm audit --prod --audit-level high
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Run gitleaks
+        env:
+          GITLEAKS_VERSION: 8.30.1
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          tarball="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          release="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
+          curl -fsSL -o "$RUNNER_TEMP/$tarball" "$release/$tarball"
+          curl -fsSL "$release/gitleaks_${GITLEAKS_VERSION}_checksums.txt" \
+            | grep " $tarball\$" | (cd "$RUNNER_TEMP" && sha256sum -c -)
+          tar -xzf "$RUNNER_TEMP/$tarball" -C "$RUNNER_TEMP" gitleaks
+          case "$EVENT_NAME" in
+            pull_request) log_opts="--no-merges --first-parent $PR_BASE..$PR_HEAD" ;;
+            *) log_opts="" ;;
+          esac
+          "$RUNNER_TEMP/gitleaks" git --redact --verbose --log-opts="$log_opts" .
+
+  scripts:
+    name: Scripts are executable
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - name: Every scripts/*.sh is committed with mode 100755
+        run: |
+          status=0
+          while IFS= read -r line; do
+            mode="${line%% *}"; path="${line#*$'\t'}"
+            if [ "$mode" != "100755" ] || ! test -x "$path"; then
+              echo "::error file=$path::$path is not executable. Fix with: git update-index --chmod=+x $path"
+              status=1
+            fi
+          done < <(git ls-files -s -- 'scripts/*.sh')
+          exit "$status"

@@ -1,0 +1,48 @@
+# Environment files and keys. Only the example, with empty secret values, is committed.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Node.js dependencies and build output
+node_modules/
+.pnpm-store/
+dist/
+build/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+# Test reports
+test-results/
+playwright-report/
+
+# Go build output
+/bin/
+*.test
+*.out
+
+# Logs and local scratch
+*.log
+logs/
+tmp/
+.cache/
+
+# OS files, including Windows download markers on NTFS drives
+.DS_Store
+Thumbs.db
+desktop.ini
+*:Zone.Identifier
+
+# Office lock files
+~$*
+
+# Editors
+.idea/
+*.swp
+
+# AI agent local state (worktrees and per-user settings)
+.claude/worktrees/
+.claude/settings.local.json
