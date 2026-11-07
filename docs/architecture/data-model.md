@@ -66,8 +66,9 @@ The dataset is **semver-versioned** (the `version` in `package.json`). A consume
 
 Set by decision record [0003](../decisions/0003-data-architecture-one-file-per-term.md). A consuming site:
 
-- Pre-renders **one static page per term** and a browsable index (by domain and alphabetical) that work with **no JavaScript**, under the handbook's strict CSP, with self-hosted fonts (Peyda, Morabba) and Arghavani used **only** as the accent.
+- Renders **a page per term** and a browsable index (by domain and alphabetical) that work with **no JavaScript**, under the handbook's strict CSP, with self-hosted fonts (Peyda, Morabba) and Arghavani used **only** as the accent. The website renders these server-side per request; see [decision 0005](../decisions/0005-index-only-review-worthy-terms.md).
 - Treats client-side search over `dist/index.json` as a progressive enhancement, never the only way to reach a term.
 - Uses each term's slug as its URL path, and honours `aliases` as redirects to it.
+- **Indexes a term page only when it is reviewed, substantive and demand-worthy** — everything else is `noindex` and out of the sitemap, though still viewable. Multilingual pages self-canonical with hreflang; Arabic stays English-canonical until translated. See [decision 0005](../decisions/0005-index-only-review-worthy-terms.md).
 
 This repository guarantees the dataset shape and its version; a consumer implements the contract in its own repository.

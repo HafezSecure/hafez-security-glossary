@@ -10,6 +10,7 @@ The status column is the point of this index. A superseded record stays, and poi
 | [0002](0002-public-repository-and-open-licence.md) | Publish the glossary as a public repository under an open licence | accepted |
 | [0003](0003-data-architecture-one-file-per-term.md) | One file per term, built into versioned datasets a consumer reads | accepted |
 | [0004](0004-academy-primary-term-feeder.md) | The HafezSecure Academy is the primary feeder of terms | accepted |
+| [0005](0005-index-only-review-worthy-terms.md) | Index a term page only when it is reviewed, substantive and worth landing on | accepted |
 
 ## Writing one
 
