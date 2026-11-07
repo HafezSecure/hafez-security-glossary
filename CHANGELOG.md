@@ -15,7 +15,8 @@ Record what someone using the glossary or its datasets would notice, not the com
 - The `validate` and `build` scripts and the local gate wired around them.
 - An initial seed of draft terms spanning all eight domains, pending review.
 - Decision record 0004: the HafezSecure Academy is the primary feeder of terms.
-- The roadmap and operating model ([docs/plans/roadmap.md](docs/plans/roadmap.md)).
+- Decision record 0005: index a term page only when it is reviewed, substantive and demand-worthy (the SEO indexing policy).
+- The roadmap and operating model ([docs/plans/roadmap.md](docs/plans/roadmap.md)), now with an SEO/indexing section and a phased content-growth plan (proactive mining of the Academy corpus, plus the XR-12 feeder).
 
 ### Changed
 
