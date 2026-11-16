@@ -21,6 +21,7 @@ Every document in this repository is listed here. Read in this order if you are 
 - [Changelog](../CHANGELOG.md): what changed in each release.
 - [Handbook sync record](handbook-sync.md): the last handbook version read, and where this repository deviates from handbook policy.
 - [Lessons learned](lessons-learned.md): what building the glossary has taught, newest first.
+- [Open work](open-work.md): the open pull requests, grouped by effort, with their status.
 
 ## Layout
 

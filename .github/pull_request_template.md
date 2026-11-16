@@ -1,3 +1,11 @@
+<!-- Provenance — fill these so anyone can place this pull request without opening the diff. -->
+
+**Owning effort:** <!-- what this belongs to, e.g. `glossary · terms`, `glossary · tooling` -->
+
+**Status:** Ready for review <!-- or: Holding — the reason it cannot merge yet -->
+
+**Supersedes:** none <!-- or #NNN if this replaces another pull request -->
+
 ## What
 
 <!-- One or two sentences on what changed, described by its effect for a user or reader. -->
