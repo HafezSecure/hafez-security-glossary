@@ -6,7 +6,7 @@ This file is the entry point for AI coding agents working in this repository. `C
 
 ## Read first
 
-0. **Daily handbook sync.** At the first session of the working day on this repository, read the handbook [CHANGELOG](https://github.com/HafezSecure/hafez-handbook/blob/main/CHANGELOG.md) entries newer than the version recorded in [docs/handbook-sync.md](docs/handbook-sync.md), record them there and move the sync point.
+0. **Daily handbook sync.** At the first session of the working day on this repository, read the handbook [CHANGELOG](https://github.com/HafezSecure/hafez-handbook/blob/main/CHANGELOG.md) entries newer than the version recorded in [docs/handbook-sync.md](docs/handbook-sync.md), record them there and move the sync point. Then refresh [docs/open-work.md](docs/open-work.md), and make sure every open pull request has its provenance lines and its `area:`, `status:` and `kind:` labels (set with `gh api`). This repository is public: never copy handbook text, entry titles or internal detail into it.
 1. This file, then [docs/README.md](docs/README.md) and the reading order it gives — above all [docs/architecture/data-model.md](docs/architecture/data-model.md) and [docs/translation-policy.md](docs/translation-policy.md).
 2. The decision records that touch your task: [docs/decisions/README.md](docs/decisions/README.md).
 3. [CONTRIBUTING.md](CONTRIBUTING.md) for the format, the review and the commit rules.

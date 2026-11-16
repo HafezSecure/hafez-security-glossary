@@ -37,6 +37,8 @@ pnpm run build
 - **HafezSecure team members sign every commit** (SSH signing) and never force-push. External contributions need not be signed; a maintainer reviews and merges them.
 - A commit substantially written by an AI agent carries a `Co-Authored-By` trailer naming the tool and model.
 - Open the pull request against `main`, fill in the template, and keep it to one topic.
+- The template starts with three lines: the owning effort, the status and what the pull request supersedes. A maintainer adds the labels (one `area:`, one `status:` and one `kind:`) and lists the pull request in [docs/open-work.md](docs/open-work.md) while it is open, so outside contributors do not need to.
+- A change to the glossary is a pull request here. HafezSecure's own shared rules are changed in the company handbook, not in this repository.
 
 ## The local gate
 
