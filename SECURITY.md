@@ -4,7 +4,7 @@ The Hafez Security Glossary is built by HafezSecure, a security company, so it i
 
 ## Reporting a vulnerability
 
-Email **security@hafezsecure.ir**.
+Email **info@hafezsecure.ir**, HafezSecure's public contact address, with "Security" in the subject line.
 
 - A vulnerability here means a problem in the tooling (for example, the build or a script mishandling input in a way that could harm someone who runs it) — not a disputed translation. Propose a content fix the normal way; see [CONTRIBUTING.md](CONTRIBUTING.md).
 - Do not open a public issue or pull request for a security vulnerability, and do not report it to a personal address.
