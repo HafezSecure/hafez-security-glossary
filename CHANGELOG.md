@@ -6,6 +6,10 @@ Record what someone using the glossary or its datasets would notice, not the com
 
 ## [Unreleased]
 
+### Changed
+
+- The README no longer says the website already renders the glossary (that page is planned, not live), no longer links the company's private handbook, and security reports now go to the company's public contact address.
+
 ### Added
 
 - Project skeleton from the HafezSecure handbook's new-project template, adapted for a public data repository.

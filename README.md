@@ -2,13 +2,13 @@
 
 An open, bilingual English–Persian dictionary of information-security terms, curated by HafezSecure as a contribution to the Persian-speaking security community.
 
-A HafezSecure project. It follows the [HafezSecure handbook](https://github.com/HafezSecure/hafez-handbook/blob/main/README.md) unless a decision record in [docs/decisions](docs/decisions/README.md) says otherwise. Unlike other HafezSecure repositories, this one is **public and openly licensed** — see [decision record 0002](docs/decisions/0002-public-repository-and-open-licence.md).
+A HafezSecure project. It follows the HafezSecure handbook (the company's internal engineering rules, not public) unless a decision record in [docs/decisions](docs/decisions/README.md) says otherwise. Unlike other HafezSecure repositories, this one is **public and openly licensed** — see [decision record 0002](docs/decisions/0002-public-repository-and-open-licence.md).
 
 ## What this is
 
 Persian security terminology is fragmented: many terms are half-transliterated, others have several competing translations, and there is no authoritative reference. This repository is that reference — each term gets one page with a preferred Persian rendering, the accepted alternatives, short definitions in both languages, a usage example and cross-links.
 
-It is **data first**: the terms live as one small file each, and a build turns them into the datasets a website, an app or a learner's tool consumes. The website at `hafezsecure.ir` renders them as a searchable glossary.
+It is **data first**: the terms live as one small file each, and a build turns them into the datasets a website, an app or a learner's tool consumes. The website at `hafezsecure.ir` will render them as a searchable glossary; that page is not live yet.
 
 This is **not** the company's own product-and-service naming glossary (that lives in the handbook). It is general security terminology for everyone.
 
@@ -20,7 +20,7 @@ This is **not** the company's own product-and-service naming glossary (that live
 | Version | 0.1.0 |
 | Owner | Founder |
 | Highest data classification | Public (عادی) |
-| Hosting | GitHub (source); rendered on hafezsecure.ir |
+| Hosting | GitHub (source); a rendered glossary on hafezsecure.ir is planned, not live yet |
 | Locales | `fa` (default, RTL), `en` |
 
 ## Quick start
@@ -63,4 +63,4 @@ See [decision record 0002](docs/decisions/0002-public-repository-and-open-licenc
 
 ## Security
 
-Report a vulnerability in the tooling to **security@hafezsecure.ir**; do not open a public issue for it. [SECURITY.md](SECURITY.md) has the detail. A wrong or disputed translation is not a vulnerability — propose a fix the normal way.
+Report a vulnerability in the tooling by email to **info@hafezsecure.ir** with "Security" in the subject line; do not open a public issue for it. [SECURITY.md](SECURITY.md) has the detail. A wrong or disputed translation is not a vulnerability — propose a fix the normal way.
