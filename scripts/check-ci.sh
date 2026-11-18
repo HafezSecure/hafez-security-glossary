@@ -16,6 +16,7 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 GITLEAKS_VERSION="8.30.1"   # the same pin as the workflow's secrets job
+OPENGREP_VERSION="1.30.2"   # the same pin as the workflow's sast job
 
 full_history=false
 [ "${1:-}" = "--full-history" ] && full_history=true
@@ -64,7 +65,38 @@ secret_scan() {
 }
 run "Secret scan (gitleaks ${GITLEAKS_VERSION})" secret_scan
 
-# 5. Every scripts/*.sh is committed executable.
+# 5. Static analysis with the company rules in .opengrep/: the rules' test cases, then every finding
+# as a report, then ERROR findings block. On a branch only the ERROR findings introduced since it
+# left origin/main block, as on a pull request; on main itself every ERROR finding blocks. Opengrep
+# is pinned; when it is absent this is an honest SKIP with install guidance, never a faked pass.
+opengrep_bin() {
+  local bin
+  bin="$(command -v opengrep || true)"
+  [ -z "$bin" ] && [ -x "$HOME/.local/bin/opengrep" ] && bin="$HOME/.local/bin/opengrep"
+  printf '%s' "$bin"
+}
+static_analysis() {
+  local bin base=()
+  bin="$(opengrep_bin)"
+  if [ "$("$bin" --version 2>/dev/null)" != "${OPENGREP_VERSION}" ]; then
+    echo "opengrep is $("$bin" --version 2>/dev/null), the gate pins ${OPENGREP_VERSION}"; return 1
+  fi
+  "$bin" test .opengrep || return 1
+  echo "-- every finding (report, does not block) --"
+  "$bin" scan --config .opengrep --quiet . || true
+  if git rev-parse -q --verify origin/main >/dev/null && [ "$(git rev-list --count origin/main..HEAD)" -gt 0 ]; then
+    base=(--baseline-commit "$(git merge-base origin/main HEAD)")
+  fi
+  echo "-- ERROR findings (block) --"
+  "$bin" scan --config .opengrep --severity ERROR --error --quiet ${base[@]+"${base[@]}"} .
+}
+if [ -z "$(opengrep_bin)" ]; then
+  skip "Static analysis (Opengrep ${OPENGREP_VERSION})" "opengrep ${OPENGREP_VERSION} is not installed — download opengrep_manylinux_x86 from https://github.com/opengrep/opengrep/releases/tag/v${OPENGREP_VERSION} to \$HOME/.local/bin/opengrep (verify the checksum, then chmod +x), as the workflow's sast job does"
+else
+  run "Static analysis (Opengrep ${OPENGREP_VERSION})" static_analysis
+fi
+
+# 6. Every scripts/*.sh is committed executable.
 exec_bits() {
   local status=0 line mode path
   while IFS= read -r line; do

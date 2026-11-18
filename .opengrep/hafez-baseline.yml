@@ -1,0 +1,412 @@
+# HafezSecure baseline rules for the static analysis gate (Opengrep, pinned in the gate).
+#
+# Each rule turns a ban in the handbook's application security baseline into a check a tool runs:
+# https://github.com/HafezSecure/hafez-handbook/blob/main/security/application-security-baseline.md
+#
+# - ERROR blocks the gate. WARNING is reported for review and does not block: those rules match by
+#   name or shape and need a person to judge them.
+# - Silence a reviewed false positive on its own line with a `nosemgrep: <rule id>` comment followed
+#   by the reason. Never delete or weaken a rule to get a merge through.
+# - The test files next to this one (same name, one per language) mark what each rule must and must
+#   not match; the gate runs them before the scan, so a tool upgrade that breaks a rule fails loudly.
+# - Keep this file identical to the handbook template's copy; propose new rules there.
+rules:
+  # Output encoding: no raw HTML sinks.
+  - id: hafez-raw-html-sink
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: >-
+      Raw HTML sink. Untrusted or model-generated content must not reach innerHTML, outerHTML,
+      insertAdjacentHTML or dangerouslySetInnerHTML: build nodes with createElement and textContent.
+      Handbook: security/application-security-baseline.md#output-encoding
+    patterns:
+      - pattern-either:
+          - pattern: $EL.innerHTML = $X
+          - pattern: $EL.outerHTML = $X
+          - pattern: $EL.insertAdjacentHTML($POS, $X)
+          - pattern: <$TAG dangerouslySetInnerHTML={$X} />
+          - pattern: <$TAG dangerouslySetInnerHTML={$X}>$...BODY</$TAG>
+          - pattern: "{dangerouslySetInnerHTML: $X}"
+      - pattern-not: $EL.innerHTML = "..."
+      - pattern-not: $EL.outerHTML = "..."
+      # Structured data is checked by hafez-jsonld-unescaped instead.
+      - pattern-not: <script type="application/ld+json" dangerouslySetInnerHTML={$X} />
+
+  - id: hafez-jsonld-unescaped
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: >-
+      JSON.stringify does not escape "<", so a value containing "</script>" ends the structured-data
+      block early. Serialise through one helper that escapes "<" (as \u003c).
+      Handbook: security/application-security-baseline.md#output-encoding
+    pattern: '<script type="application/ld+json" dangerouslySetInnerHTML={{__html: JSON.stringify(...)}} />'
+
+  - id: hafez-dynamic-code
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: >-
+      Code built from a string at run time (eval, new Function, a string passed to setTimeout or
+      setInterval). Handbook: security/application-security-baseline.md#output-encoding
+    pattern-either:
+      - pattern: eval($X)
+      - pattern: new Function(...)
+      - pattern: setTimeout("...", ...)
+      - pattern: setInterval("...", ...)
+
+  - id: hafez-python-dynamic-code
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Code built from a string at run time (eval or exec on a non-literal).
+      Handbook: security/application-security-baseline.md#input-validation
+    patterns:
+      - pattern-either:
+          - pattern: eval($X)
+          - pattern: exec($X)
+      - pattern-not: eval("...")
+      - pattern-not: exec("...")
+
+  # Database access: parameterised queries only.
+  - id: hafez-sql-from-string
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: >-
+      A query built from an interpolated string, or a raw-string escape hatch given a non-literal.
+      Bind parameters instead (a tagged template such as $queryRaw`...` is fine).
+      Handbook: security/application-security-baseline.md#database-access
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern-either:
+                  - pattern: $DB.$M(`...${$X}...`, ...)
+                  - pattern: $DB.$M("..." + $X, ...)
+                  - pattern: $DB.$M($X + "...", ...)
+              - metavariable-regex:
+                  metavariable: $M
+                  regex: ^(query|execute|unsafe|prepare)$
+          - patterns:
+              - pattern: $DB.raw(`...${$X}...`, ...)
+              - metavariable-regex:
+                  metavariable: $DB
+                  regex: (?i)^(knex|db|trx|tx|sql|database|conn|connection|pool|client)$
+          - pattern: $DB.$queryRawUnsafe($Q, ...)
+          - pattern: $DB.$executeRawUnsafe($Q, ...)
+      - pattern-not: $DB.$queryRawUnsafe("...", ...)
+      - pattern-not: $DB.$executeRawUnsafe("...", ...)
+      # An identifier or literal escaped by the driver is not injectable.
+      - pattern-not: $DB.$M(`...${$PG.escapeIdentifier($V)}...`, ...)
+      - pattern-not: $DB.$M(`...${$PG.escapeLiteral($V)}...`, ...)
+    paths:
+      exclude:
+        - "**/migrations/**"
+
+  - id: hafez-python-sql-from-string
+    languages: [python]
+    severity: ERROR
+    message: >-
+      A query built with an f-string, % or .format. Pass the values as bound parameters.
+      Handbook: security/application-security-baseline.md#database-access
+    pattern-either:
+      - pattern: $CUR.execute(f"...", ...)
+      - pattern: $CUR.execute("..." % $X, ...)
+      - pattern: $CUR.execute("...".format(...), ...)
+      - pattern: $CUR.executemany(f"...", ...)
+      - pattern: text(f"...")
+      - pattern: text("..." % $X)
+      - pattern: text("...".format(...))
+    paths:
+      exclude:
+        - "**/alembic/versions/**"
+        - "**/migrations/**"
+
+  - id: hafez-go-sql-from-string
+    languages: [go]
+    severity: ERROR
+    message: >-
+      A query built with fmt.Sprintf or concatenation. Pass the values as bound parameters.
+      Handbook: security/application-security-baseline.md#database-access
+    patterns:
+      - pattern-either:
+          - pattern: $DB.$M(fmt.Sprintf(...), ...)
+          - pattern: $DB.$M($CTX, fmt.Sprintf(...), ...)
+          - pattern: $DB.$M("..." + $X, ...)
+          - pattern: $DB.$M($CTX, "..." + $X, ...)
+      - metavariable-regex:
+          metavariable: $M
+          regex: ^(Query|QueryRow|Exec|QueryContext|QueryRowContext|ExecContext|Prepare|PrepareContext)$
+
+  # Shell commands: arguments as an array, never a composed shell string.
+  - id: hafez-shell-string
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: >-
+      A shell command composed from a non-literal string, or a spawn with shell: true. Use execFile
+      or spawn with an argument array. Handbook: security/application-security-baseline.md#database-access
+    patterns:
+      - pattern-either:
+          - pattern: require("child_process").exec($CMD, ...)
+          - pattern: require("child_process").execSync($CMD, ...)
+          - pattern: require("node:child_process").exec($CMD, ...)
+          - pattern: require("node:child_process").execSync($CMD, ...)
+          - patterns:
+              - pattern-either:
+                  - pattern-inside: |
+                      import { ..., exec, ... } from "$MOD";
+                      ...
+                  - pattern-inside: |
+                      import { ..., execSync, ... } from "$MOD";
+                      ...
+                  - pattern-inside: |
+                      const { ..., exec, ... } = require("$MOD");
+                      ...
+                  - pattern-inside: |
+                      const { ..., execSync, ... } = require("$MOD");
+                      ...
+              - metavariable-regex:
+                  metavariable: $MOD
+                  regex: ^(node:)?child_process$
+              - pattern-either:
+                  - pattern: exec($CMD, ...)
+                  - pattern: execSync($CMD, ...)
+          - pattern: "$CP.spawn($C, $ARGS, {..., shell: true, ...})"
+          - pattern: "spawn($C, $ARGS, {..., shell: true, ...})"
+      - pattern-not: require("child_process").exec("...", ...)
+      - pattern-not: require("child_process").execSync("...", ...)
+      - pattern-not: exec("...", ...)
+      - pattern-not: execSync("...", ...)
+
+  - id: hafez-python-shell-string
+    languages: [python]
+    severity: ERROR
+    message: >-
+      A shell command composed from a string (shell=True, os.system, os.popen). Pass an argument list
+      without a shell. Handbook: security/application-security-baseline.md#database-access
+    patterns:
+      - pattern-either:
+          - pattern: subprocess.$F(..., shell=True, ...)
+          - pattern: os.system($X)
+          - pattern: os.popen($X, ...)
+      - pattern-not: os.system("...")
+      - pattern-not: os.popen("...", ...)
+
+  - id: hafez-go-shell-string
+    languages: [go]
+    severity: ERROR
+    message: >-
+      A command run through a shell with a composed string. Call the program with an argument list.
+      Handbook: security/application-security-baseline.md#database-access
+    patterns:
+      - pattern-either:
+          - pattern: exec.Command("sh", "-c", $X)
+          - pattern: exec.Command("bash", "-c", $X)
+          - pattern: exec.CommandContext($CTX, "sh", "-c", $X)
+          - pattern: exec.CommandContext($CTX, "bash", "-c", $X)
+      - pattern-not: exec.Command("sh", "-c", "...")
+      - pattern-not: exec.Command("bash", "-c", "...")
+      - pattern-not: exec.CommandContext($CTX, "sh", "-c", "...")
+      - pattern-not: exec.CommandContext($CTX, "bash", "-c", "...")
+
+  # Transport: never turn certificate verification off.
+  - id: hafez-tls-verification-off
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: >-
+      Certificate verification turned off. Trust the right certificate authority instead.
+      Handbook: security/application-security-baseline.md
+    pattern-either:
+      - pattern: "{..., rejectUnauthorized: false, ...}"
+      - pattern: process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
+      - pattern: process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0"
+
+  - id: hafez-python-tls-verification-off
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Certificate verification turned off. Trust the right certificate authority instead.
+      Handbook: security/application-security-baseline.md
+    pattern-either:
+      - pattern: $LIB.$F(..., verify=False, ...)
+      - pattern: ssl._create_unverified_context(...)
+
+  - id: hafez-go-tls-verification-off
+    languages: [go]
+    severity: ERROR
+    message: >-
+      Certificate verification turned off. Trust the right certificate authority instead.
+      Handbook: security/application-security-baseline.md
+    pattern: "tls.Config{..., InsecureSkipVerify: true, ...}"
+
+  # Tokens and deserialisation.
+  - id: hafez-python-jwt-unverified
+    languages: [python]
+    severity: ERROR
+    message: >-
+      A token decoded without verifying its signature or with the "none" algorithm.
+      Handbook: security/application-security-baseline.md#single-sign-on-for-organisation-products
+    pattern-either:
+      - pattern: 'jwt.decode(..., options={..., "verify_signature": False, ...}, ...)'
+      - pattern: 'jwt.decode(..., algorithms=[..., "none", ...], ...)'
+
+  - id: hafez-jwt-decode-without-verify
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: >-
+      jwt.decode reads a token without checking its signature. Use verify, unless the token was
+      verified elsewhere and this only reads a claim. Handbook: security/application-security-baseline.md#single-sign-on-for-organisation-products
+    pattern: jwt.decode(...)
+
+  - id: hafez-python-unsafe-yaml
+    languages: [python]
+    severity: ERROR
+    message: >-
+      yaml.load without the safe loader can build arbitrary objects. Use yaml.safe_load.
+      Handbook: security/application-security-baseline.md#input-validation
+    patterns:
+      - pattern: yaml.load(...)
+      - pattern-not: yaml.load(..., Loader=yaml.SafeLoader, ...)
+      - pattern-not: yaml.load(..., Loader=SafeLoader, ...)
+      - pattern-not: yaml.load(..., Loader=yaml.CSafeLoader, ...)
+
+  - id: hafez-python-pickle
+    languages: [python]
+    severity: WARNING
+    message: >-
+      pickle runs code from the data it loads. Never unpickle anything that crossed a trust boundary.
+      Handbook: security/application-security-baseline.md#input-validation
+    pattern-either:
+      - pattern: pickle.loads(...)
+      - pattern: pickle.load(...)
+
+  - id: hafez-python-debug-mode
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Debug mode sends stack traces to the client. Keep it out of code; enable it only from
+      development configuration. Handbook: security/application-security-baseline.md#error-handling
+    pattern-either:
+      - pattern: FastAPI(..., debug=True, ...)
+      - pattern: $APP.run(..., debug=True, ...)
+
+  # Judgement calls: reported, never blocking.
+  - id: hafez-secret-equality
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: >-
+      This looks like a secret compared with ordinary equality. Compare secrets in constant time
+      (hash both, then crypto.timingSafeEqual). Handbook: security/application-security-baseline.md#constant-time-comparison
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern-either:
+                  - pattern: $A === $B
+                  - pattern: $A !== $B
+                  - pattern: $A == $B
+                  - pattern: $A != $B
+              - metavariable-regex:
+                  metavariable: $A
+                  regex: (?i).*(token|secret|passw|otp|totp|apikey|api_key|signature|hmac|digest|csrf)[a-z_]*$
+          - patterns:
+              - pattern-either:
+                  - pattern: $A === $B
+                  - pattern: $A !== $B
+                  - pattern: $A == $B
+                  - pattern: $A != $B
+              - metavariable-regex:
+                  metavariable: $B
+                  regex: (?i).*(token|secret|passw|otp|totp|apikey|api_key|signature|hmac|digest|csrf)[a-z_]*$
+      - pattern-not: $A === "..."
+      - pattern-not: $A !== "..."
+      - pattern-not: $A == "..."
+      - pattern-not: $A != "..."
+      - pattern-not: $A === undefined
+      - pattern-not: $A !== undefined
+      - pattern-not: $A === null
+      - pattern-not: $A !== null
+      - pattern-not: $A == null
+      - pattern-not: $A != null
+      - pattern-not: typeof $A === $T
+      - pattern-not: typeof $A !== $T
+      - pattern-not: $A.length === $N
+      - pattern-not: $A.length !== $N
+
+  - id: hafez-python-secret-equality
+    languages: [python]
+    severity: WARNING
+    message: >-
+      This looks like a secret compared with ordinary equality. Use hmac.compare_digest.
+      Handbook: security/application-security-baseline.md#constant-time-comparison
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern-either:
+                  - pattern: $A == $B
+                  - pattern: $A != $B
+              - metavariable-regex:
+                  metavariable: $A
+                  regex: (?i).*(token|secret|passw|otp|totp|apikey|api_key|signature|hmac|digest|csrf)[a-z_]*$
+          - patterns:
+              - pattern-either:
+                  - pattern: $A == $B
+                  - pattern: $A != $B
+              - metavariable-regex:
+                  metavariable: $B
+                  regex: (?i).*(token|secret|passw|otp|totp|apikey|api_key|signature|hmac|digest|csrf)[a-z_]*$
+      - pattern-not: $A == "..."
+      - pattern-not: $A != "..."
+      - pattern-not: $A == None
+      - pattern-not: $A != None
+
+  - id: hafez-forwarded-for-identity
+    languages: [javascript, typescript, python, go]
+    severity: WARNING
+    message: >-
+      X-Forwarded-For carries the CDN's edge address, not the visitor's. Read the client IP through
+      the one helper that uses Ar-Real-Ip; forwarding the header unchanged is fine.
+      Handbook: security/application-security-baseline.md#rate-limits-and-the-real-client-ip
+    pattern-regex: (?i)["'`]x-forwarded-for["'`]
+
+  - id: hafez-weak-hash
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: >-
+      MD5 or SHA-1. Fine for a cache key or a checksum; never for a password, a token or a signature.
+      Handbook: security/application-security-baseline.md#passwords-when-a-product-cannot-avoid-them
+    pattern-either:
+      - pattern: $C.createHash("md5")
+      - pattern: $C.createHash("sha1")
+      - pattern: createHash("md5")
+      - pattern: createHash("sha1")
+
+  - id: hafez-python-weak-hash
+    languages: [python]
+    severity: WARNING
+    message: >-
+      MD5 or SHA-1. Fine for a cache key or a checksum; never for a password, a token or a signature.
+      Handbook: security/application-security-baseline.md#passwords-when-a-product-cannot-avoid-them
+    pattern-either:
+      - pattern: hashlib.md5(...)
+      - pattern: hashlib.sha1(...)
+
+  - id: hafez-insecure-random-secret
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: >-
+      Math.random is predictable. Generate tokens, codes, nonces and salts with crypto.randomBytes
+      or crypto.randomInt. Handbook: security/application-security-baseline.md#authentication
+    patterns:
+      - pattern-either:
+          - pattern-inside: const $V = $E;
+          - pattern-inside: let $V = $E;
+          - pattern-inside: $V = $E
+      - pattern: Math.random()
+      - metavariable-regex:
+          metavariable: $V
+          regex: (?i).*(token|secret|otp|code|nonce|passw|salt|key|session)
+
+  - id: hafez-csp-unsafe-source
+    languages: [javascript, typescript, python]
+    severity: WARNING
+    message: >-
+      'unsafe-inline' or 'unsafe-eval' in a Content Security Policy. Use nonces or remove the inline
+      code. Handbook: security/application-security-baseline.md#content-security-policy
+    pattern-regex: '''unsafe-(inline|eval)'''

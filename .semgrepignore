@@ -1,0 +1,15 @@
+# Paths the static analysis gate (Opengrep) does not scan. Opengrep reads this file.
+# Add a path only with a comment saying why it is safe to skip: vendored third-party code or
+# generated output. Never add project code to quiet a finding: fix it, or mark the one line with a
+# nosemgrep comment and the reason.
+
+# Dependencies and generated output (the built datasets under dist/ are produced from the terms).
+node_modules/
+dist/
+build/
+.next/
+out/
+coverage/
+
+# The rules' own test cases, which contain each banned pattern on purpose.
+.opengrep/

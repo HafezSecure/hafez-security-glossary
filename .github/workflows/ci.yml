@@ -91,6 +91,42 @@ jobs:
           esac
           "$RUNNER_TEMP/gitleaks" git --redact --verbose --log-opts="$log_opts" .
 
+  # Static analysis: the company rules in .opengrep/ (the handbook's application security baseline
+  # as checks), with the pinned, checksum-verified Opengrep. The rules' own test cases run first, so
+  # a tool upgrade that breaks a rule fails here. ERROR findings block; WARNING findings are printed
+  # for review. On a pull request only findings the change introduces block. This repository emits
+  # JSON datasets and has no executable web surface, so few or no findings are expected. Silence a
+  # reviewed false positive on its line with a nosemgrep comment and the reason; skip a path only in
+  # .semgrepignore, with a comment saying why.
+  sast:
+    name: Static analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      OPENGREP_VERSION: v1.30.2  # pinned; bump deliberately and update the checksum with it
+      OPENGREP_SHA256: a66aa3278457f02b287b985a45b6762aebcaba5000f2689245fd1ed86d1456c7
+      PR_BASE: ${{ github.event.pull_request.base.sha }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Install Opengrep
+        run: |
+          set -euo pipefail
+          curl -fsSL -o "$RUNNER_TEMP/opengrep" \
+            "https://github.com/opengrep/opengrep/releases/download/${OPENGREP_VERSION}/opengrep_manylinux_x86"
+          echo "${OPENGREP_SHA256}  $RUNNER_TEMP/opengrep" | sha256sum -c -
+          chmod +x "$RUNNER_TEMP/opengrep"
+      - name: The rules match their test cases
+        run: '"$RUNNER_TEMP/opengrep" test .opengrep'
+      - name: Every finding (informational, does not block)
+        run: '"$RUNNER_TEMP/opengrep" scan --config .opengrep --quiet . || true'
+      - name: Gate on ERROR findings
+        run: |
+          baseline=()
+          [ -n "${PR_BASE}" ] && baseline=(--baseline-commit "${PR_BASE}")
+          "$RUNNER_TEMP/opengrep" scan --config .opengrep --severity ERROR --error --quiet "${baseline[@]}" .
+
   scripts:
     name: Scripts are executable
     runs-on: ubuntu-latest

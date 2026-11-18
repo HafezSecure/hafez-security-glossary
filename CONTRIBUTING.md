@@ -36,13 +36,14 @@ pnpm run build
 - Stage explicit paths only; never `git add -A` or `git commit -a`. One topic per branch, branched from fresh `main`.
 - **HafezSecure team members sign every commit** (SSH signing) and never force-push. External contributions need not be signed; a maintainer reviews and merges them.
 - A commit substantially written by an AI agent carries a `Co-Authored-By` trailer naming the tool and model.
+- This repository is public and its commit history is permanent, so commit with a **noreply identity**, not a personal email: set a `noreply` commit email (for example a GitHub `…@users.noreply.github.com` address) before you contribute.
 - Open the pull request against `main`, fill in the template, and keep it to one topic.
 - The template starts with three lines: the owning effort, the status and what the pull request supersedes. A maintainer adds the labels (one `area:`, one `status:` and one `kind:`) and lists the pull request in [docs/open-work.md](docs/open-work.md) while it is open, so outside contributors do not need to.
 - A change to the glossary is a pull request here. HafezSecure's own shared rules are changed in the company handbook, not in this repository.
 
 ## The local gate
 
-`.github/workflows/ci.yml` is the written definition of the gate; GitHub does not run it (a HafezSecure founder decision). **`pnpm check:ci`** (`scripts/check-ci.sh`) runs every step — install, validate, build, the docs check, the dependency audit, the secret scan and the script-permission check — on the commit you have checked out. A maintainer runs it on the exact commit before merging. A red gate is fixed before anything else.
+`.github/workflows/ci.yml` is the written definition of the gate; GitHub does not run it (a HafezSecure founder decision). **`pnpm check:ci`** (`scripts/check-ci.sh`) runs every step — install, validate, build, the docs check, the dependency audit, the secret scan, the static analysis scan (Opengrep, the company `.opengrep/` rules) and the script-permission check — on the commit you have checked out. A maintainer runs it on the exact commit before merging. A red gate is fixed before anything else.
 
 ## Security
 
